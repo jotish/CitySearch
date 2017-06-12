@@ -1,0 +1,10 @@
+<resources>
+  <string name="app_name">Backbase City Search</string>
+  <string name="title_activity_maps">Map</string>
+
+  <!-- TODO: Remove or change this placeholder text -->
+  <string name="hello_blank_fragment">Hello blank fragment</string>
+  <string name="search">Search</string>
+  <string name="loading">Loading...</string>
+  <string name="empty_state_city">No cities found</string>
+</resources>

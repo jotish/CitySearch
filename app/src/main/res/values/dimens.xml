@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <dimen name="margin_large">30dp</dimen>
+  <dimen name="divider_height">1dp</dimen>
+  <dimen name="margin_tiny">4dp</dimen>
+  <dimen name="padding_tiny">4dp</dimen>
+</resources>
