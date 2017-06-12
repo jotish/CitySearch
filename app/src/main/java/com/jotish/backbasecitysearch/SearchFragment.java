@@ -44,7 +44,8 @@ public class SearchFragment extends Fragment implements OnCitySelected {
   private final int DEBOUNCE_SEARCH_DELAY = 400;
   private final long INITIAL_EMISSION = 1;
   private Disposable mDisposable;
-  private List<City> mSearchList;
+ // private List<City> mSearchList;
+  private Trie mSearchTree;
 
   public SearchFragment() {
     // Required empty public constructor
@@ -96,13 +97,12 @@ public class SearchFragment extends Fragment implements OnCitySelected {
          Gson gson = new Gson();
          Type listType = new TypeToken<List<City>>(){}.getType();
          ArrayList<City> cities  = gson.fromJson(cityJson, listType);
-         mSearchList = new ArrayList<City>(cities);
-         Collections.sort(cities, new Comparator<City>() {
-           @Override
-           public int compare(final City city1, final City city2) {
-             return city1.name.compareTo(city2.name);
-           }
-         });
+         if (mSearchTree == null) {
+           mSearchTree = new Trie();
+         }
+         for (City city : cities) {
+            mSearchTree.insert();
+         }
          Collections.sort(cities, new CityComparator());
         return cities;
       }
@@ -185,8 +185,15 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     void onFragmentInteraction(Uri uri);
   }
 
-  public void onSearch(String searchKey) {
+  public boolean onSearch(String searchKey) {
+    if (mSearchList == null || mSearchList.size() <= 0) {
 
+      return false;
+    }
+    City searchCity = new City();
+    searchCity.name = searchKey;
+    Collections.binarySearch(mSearchList, searchCity);
+    return true;
   }
 
   @Override
