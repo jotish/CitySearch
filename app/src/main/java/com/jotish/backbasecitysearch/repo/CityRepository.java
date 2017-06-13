@@ -24,6 +24,7 @@ import java.util.Set;
 
 public class CityRepository {
 
+
   public static List<City> onSearch(List<City> orignalSortedList,
       TrieMap<City> searchTree, String searchKey) {
     if (searchTree == null) {
@@ -31,13 +32,22 @@ public class CityRepository {
     }
     // Search prefixes using the Perfix Search Tree
     if (Utils.isNotEmptyString(searchKey)) {
+      int mMaxLength = Integer.MAX_VALUE;
       searchKey = searchKey.toLowerCase(Locale.getDefault()).trim();
+      if (searchKey.length() <= 3) {
+        mMaxLength = 10; // return only 10 values when search key is small
+      }
       ArrayList<City> citiesList = new ArrayList<>();
       TrieMap<City> result = searchTree.getSubTrie(searchKey);
       if (result != null) {
         Set<Entry<String, City>> cities = result.entrySet();
+        int i = 0;
         for (Map.Entry<String, City> city : cities) {
             citiesList.add(city.getValue());
+            i++;
+            if (i > mMaxLength ) {
+              break;
+            }
         }
       }
       sortList(citiesList);

@@ -37,7 +37,7 @@ public class SearchFragment extends Fragment implements OnCitySelected,LoaderCal
   private String mSearchKey;
   private String mSearchTypingString;
   private Handler mHandler;
-  private final int SEARCH_DEBOUNCE = 500; //milliseonds
+  private final int SEARCH_DEBOUNCE = 600; //milliseonds
   private final int LOADER_ID = 99932;
 
   public SearchFragment() {
