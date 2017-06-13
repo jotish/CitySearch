@@ -14,7 +14,7 @@ public class Utils {
     public static  String loadJSONFromAsset(Context context) {
         String json = null;
         try {
-          InputStream is = context.getAssets().open("city.list-short.json");
+          InputStream is = context.getAssets().open("city.list.json");
           int size = is.available();
           byte[] buffer = new byte[size];
           is.read(buffer);
@@ -30,4 +30,7 @@ public class Utils {
     return !(null == activity || activity.isFinishing() || activity.isDestroyed());
   }
 
+  public static boolean isNotEmptyString(String mValue) {
+    return mValue != null && !mValue.trim().isEmpty();
+  }
 }

@@ -11,12 +11,15 @@ import android.view.ViewGroup;
 
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 import com.jakewharton.rxbinding2.widget.TextViewTextChangeEvent;
 import com.jotish.backbasecitysearch.CityAdapter.OnCitySelected;
 import com.jotish.backbasecitysearch.models.City;
+import com.jotish.backbasecitysearch.trie.TrieFactory;
+import com.jotish.backbasecitysearch.trie.TrieMap;
 import com.jotish.backbasecitysearch.views.RecyclerViewPlus;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -31,6 +34,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -44,8 +51,10 @@ public class SearchFragment extends Fragment implements OnCitySelected {
   private final int DEBOUNCE_SEARCH_DELAY = 400;
   private final long INITIAL_EMISSION = 1;
   private Disposable mDisposable;
- // private List<City> mSearchList;
-  private Trie mSearchTree;
+ private  List<City> mOriginalList;
+  private TrieMap<City> mSearchTree;
+  private View mContentView;
+  private View mProgressView;
 
   public SearchFragment() {
     // Required empty public constructor
@@ -72,11 +81,14 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     RecyclerViewPlus recyclerViewPlus = (RecyclerViewPlus)
         view.findViewById(R.id.city_recycler_view);
     mEmptyView = (TextView) view.findViewById(R.id.empty_view);
-    mEmptyView.setText(getString(R.string.loading));
+    mEmptyView.setText(getString(R.string.empty_state_city));
     recyclerViewPlus.setEmptyView(mEmptyView);
     recyclerViewPlus.setLayoutManager(new LinearLayoutManager(getContext(),
         LinearLayoutManager.VERTICAL, false));
     mCityAdapter = new CityAdapter(this);
+    mProgressView = view.findViewById(R.id.progress_container);
+    mContentView = view.findViewById(R.id.content);
+    mProgressView.setVisibility(View.VISIBLE);
     recyclerViewPlus.setAdapter(mCityAdapter);
     final EditText searchTextView = (EditText) view.findViewById(R.id.searchText);
     mTextViewDisposable = RxTextView.textChangeEvents(searchTextView)
@@ -86,7 +98,11 @@ public class SearchFragment extends Fragment implements OnCitySelected {
         .subscribe(new Consumer<TextViewTextChangeEvent>() {
           @Override
           public void accept(@NonNull final TextViewTextChangeEvent textViewTextChangeEvent) throws Exception {
-            onSearch(textViewTextChangeEvent.text().toString());
+             List<City> results = onSearch(textViewTextChangeEvent.text().toString());
+             if (results != null) {
+               mCityAdapter.clearCityList();
+               mCityAdapter.addAllCities(results);
+             }
           }
         });
 
@@ -98,13 +114,13 @@ public class SearchFragment extends Fragment implements OnCitySelected {
          Type listType = new TypeToken<List<City>>(){}.getType();
          ArrayList<City> cities  = gson.fromJson(cityJson, listType);
          if (mSearchTree == null) {
-           mSearchTree = new Trie();
+             mSearchTree =  TrieFactory.createTrieMapOptimizedForMemory();
          }
          for (City city : cities) {
-            mSearchTree.insert();
+            mSearchTree.put(city.name.toLowerCase(Locale.getDefault()), city);
          }
          Collections.sort(cities, new CityComparator());
-        return cities;
+         return cities;
       }
     });
     observable.subscribeOn(Schedulers.io())
@@ -117,18 +133,18 @@ public class SearchFragment extends Fragment implements OnCitySelected {
 
           @Override
           public void onNext(@NonNull final List<City> cities) {
+            mOriginalList = cities;
             if (Utils.isActivityAlive(getActivity())) {
-              if (cities == null || cities.size() == 0) {
-                mEmptyView.setText(R.string.empty_state_city);
-              } else {
-                mCityAdapter.addAllCities(cities);
-              }
+              mProgressView.setVisibility(View.GONE);
+               mCityAdapter.addAllCities(cities);
+              mContentView.setVisibility(View.VISIBLE);
             }
           }
 
           @Override
           public void onError(@NonNull final Throwable e) {
-
+            Toast.makeText(getActivity(), getString(R.string.failed_loading_data),
+                Toast.LENGTH_SHORT);
           }
 
           @Override
@@ -185,15 +201,26 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     void onFragmentInteraction(Uri uri);
   }
 
-  public boolean onSearch(String searchKey) {
-    if (mSearchList == null || mSearchList.size() <= 0) {
-
-      return false;
+  public List<City> onSearch(String searchKey) {
+    if (mSearchTree == null) {
+         return null;
     }
-    City searchCity = new City();
-    searchCity.name = searchKey;
-    Collections.binarySearch(mSearchList, searchCity);
-    return true;
+
+    if(Utils.isNotEmptyString(searchKey)) {
+      searchKey = searchKey.toLowerCase(Locale.getDefault());
+      ArrayList<City> citiesList = new ArrayList<>();
+      TrieMap<City> result = mSearchTree.getSubTrie(searchKey);
+      if (result != null) {
+        Set<Map.Entry<String, City>> cities = result.entrySet();
+        for (Map.Entry<String, City> city : cities) {
+          citiesList.add(city.getValue());
+        }
+      }
+      Collections.sort(citiesList, new CityComparator());
+      return citiesList;
+    }
+
+    return mOriginalList;
   }
 
   @Override
