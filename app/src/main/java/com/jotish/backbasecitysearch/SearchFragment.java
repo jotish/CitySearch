@@ -19,6 +19,7 @@ import com.jakewharton.rxbinding2.widget.RxTextView;
 import com.jakewharton.rxbinding2.widget.TextViewTextChangeEvent;
 import com.jotish.backbasecitysearch.CityAdapter.OnCitySelected;
 import com.jotish.backbasecitysearch.models.City;
+import com.jotish.backbasecitysearch.repo.CityRepository;
 import com.jotish.backbasecitysearch.trie.TrieFactory;
 import com.jotish.backbasecitysearch.trie.TrieMap;
 import com.jotish.backbasecitysearch.views.RecyclerViewPlus;
@@ -103,7 +104,7 @@ public class SearchFragment extends Fragment implements OnCitySelected {
           public void accept(@NonNull final TextViewTextChangeEvent textViewTextChangeEvent)
               throws Exception {
             String searchKey = textViewTextChangeEvent.text().toString();
-            List<City> results = onSearch(searchKey);
+            List<City> results = CityRepository.onSearch(mOriginalList, mSearchTree, searchKey);
             mSearchKey = searchKey;
             if (results != null) {
               mCityAdapter.clearCityList();
@@ -197,28 +198,6 @@ public class SearchFragment extends Fragment implements OnCitySelected {
    */
   public interface OnCitySelectedActionListener {
     void onCitySelected(City city);
-  }
-
-  public List<City> onSearch(String searchKey) {
-    if (mSearchTree == null) {
-      return null;
-    }
-
-    if (Utils.isNotEmptyString(searchKey)) {
-      searchKey = searchKey.toLowerCase(Locale.getDefault());
-      ArrayList<City> citiesList = new ArrayList<>();
-      TrieMap<City> result = mSearchTree.getSubTrie(searchKey);
-      if (result != null) {
-        Set<Map.Entry<String, City>> cities = result.entrySet();
-        for (Map.Entry<String, City> city : cities) {
-          citiesList.add(city.getValue());
-        }
-      }
-      Collections.sort(citiesList, new CityComparator());
-      return citiesList;
-    }
-
-    return mOriginalList;
   }
 
   @Override
