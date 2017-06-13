@@ -1,13 +1,13 @@
 package com.jotish.backbasecitysearch.views;
 
 import android.os.Bundle;
-
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import com.jotish.backbasecitysearch.views.CityMapFragment.OnFragmentInteractionListener;
 import com.jotish.backbasecitysearch.R;
-import com.jotish.backbasecitysearch.views.SearchFragment.OnCitySelectedActionListener;
 import com.jotish.backbasecitysearch.models.City;
+import com.jotish.backbasecitysearch.utils.Utils;
+import com.jotish.backbasecitysearch.views.CityMapFragment.OnFragmentInteractionListener;
+import com.jotish.backbasecitysearch.views.SearchFragment.OnCitySelectedActionListener;
 
 /**
  * Created by jotishsuthar on 12/06/17.
@@ -24,14 +24,19 @@ public class MainActivity extends AppCompatActivity implements OnCitySelectedAct
   }
 
   private void loadSearchFragment() {
-    SearchFragment searchFragment = SearchFragment.newInstance();
-    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-    transaction.add(R.id.fragment_container, searchFragment);
-    transaction.commit();
+    SearchFragment f = (SearchFragment)
+        getSupportFragmentManager().findFragmentByTag(SearchFragment.class.getName());
+    if(f == null) {
+      SearchFragment searchFragment = SearchFragment.newInstance();
+      FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+      transaction.add(R.id.fragment_container, searchFragment);
+      transaction.commit();
+    }
   }
 
   @Override
   public void onCitySelected(final City city) {
+    Utils.hideKeyboard(this);
     final FragmentTransaction transaction = getSupportFragmentManager()
         .beginTransaction();
     CityMapFragment fragment = CityMapFragment.newInstance(city);

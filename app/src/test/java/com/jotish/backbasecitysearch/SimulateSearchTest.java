@@ -1,6 +1,10 @@
 package com.jotish.backbasecitysearch;
 
-import android.content.Context;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+
 import com.jotish.backbasecitysearch.models.City;
 import com.jotish.backbasecitysearch.models.Coordinates;
 import com.jotish.backbasecitysearch.repo.CityRepository;
@@ -8,9 +12,6 @@ import com.jotish.backbasecitysearch.trie.TrieMap;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.junit.Assert.*;
 
 public class SimulateSearchTest {
 
