@@ -1,5 +1,6 @@
 package com.jotish.backbasecitysearch;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,7 @@ public class CityAdapter extends RecyclerViewPlus.Adapter<CityViewHolder>{
 
   public ArrayList<City> mCities;
   private OnCitySelected mCallBack;
+  private String mSearchKey;
 
 
   public CityAdapter(OnCitySelected callBack) {
@@ -32,6 +34,7 @@ public class CityAdapter extends RecyclerViewPlus.Adapter<CityViewHolder>{
     void onCitySelected(City city);
   }
 
+
   @Override
   public CityViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
     View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_city, parent, false);
@@ -41,8 +44,8 @@ public class CityAdapter extends RecyclerViewPlus.Adapter<CityViewHolder>{
   @Override
   public void onBindViewHolder(final CityViewHolder holder, final int position) {
       City city = mCities.get(position);
-      holder.mCityName.setText(city.name);
-      holder.mCountryName.setText(city.country);
+      Context context = holder.itemView.getContext();
+      holder.bind(context, city, mCallBack, mSearchKey);
   }
 
 
@@ -52,8 +55,9 @@ public class CityAdapter extends RecyclerViewPlus.Adapter<CityViewHolder>{
   }
 
 
-  public void addAllCities(List<City> cityList){
+  public void addAllCities(List<City> cityList, String searchKey){
     mCities.addAll(cityList);
+    mSearchKey = searchKey;
     notifyDataSetChanged();
   }
 

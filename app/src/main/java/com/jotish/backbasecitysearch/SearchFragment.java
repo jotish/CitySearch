@@ -1,10 +1,11 @@
 package com.jotish.backbasecitysearch;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,13 +31,10 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -44,17 +42,18 @@ import java.util.concurrent.TimeUnit;
 public class SearchFragment extends Fragment implements OnCitySelected {
 
 
-  private OnFragmentInteractionListener mListener;
+  private OnCitySelectedActionListener mListener;
   private TextView mEmptyView;
   private CityAdapter mCityAdapter;
   private Disposable mTextViewDisposable;
   private final int DEBOUNCE_SEARCH_DELAY = 400;
   private final long INITIAL_EMISSION = 1;
   private Disposable mDisposable;
- private  List<City> mOriginalList;
+  private List<City> mOriginalList;
   private TrieMap<City> mSearchTree;
   private View mContentView;
   private View mProgressView;
+  private String mSearchKey;
 
   public SearchFragment() {
     // Required empty public constructor
@@ -83,8 +82,12 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     mEmptyView = (TextView) view.findViewById(R.id.empty_view);
     mEmptyView.setText(getString(R.string.empty_state_city));
     recyclerViewPlus.setEmptyView(mEmptyView);
-    recyclerViewPlus.setLayoutManager(new LinearLayoutManager(getContext(),
-        LinearLayoutManager.VERTICAL, false));
+    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(),
+        LinearLayoutManager.VERTICAL, false);
+    recyclerViewPlus.setLayoutManager(layoutManager);
+    DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
+        recyclerViewPlus.getContext(), layoutManager.getOrientation());
+    recyclerViewPlus.addItemDecoration(dividerItemDecoration);
     mCityAdapter = new CityAdapter(this);
     mProgressView = view.findViewById(R.id.progress_container);
     mContentView = view.findViewById(R.id.content);
@@ -97,30 +100,34 @@ public class SearchFragment extends Fragment implements OnCitySelected {
         .skip(INITIAL_EMISSION) // ignore the first emission
         .subscribe(new Consumer<TextViewTextChangeEvent>() {
           @Override
-          public void accept(@NonNull final TextViewTextChangeEvent textViewTextChangeEvent) throws Exception {
-             List<City> results = onSearch(textViewTextChangeEvent.text().toString());
-             if (results != null) {
-               mCityAdapter.clearCityList();
-               mCityAdapter.addAllCities(results);
-             }
+          public void accept(@NonNull final TextViewTextChangeEvent textViewTextChangeEvent)
+              throws Exception {
+            String searchKey = textViewTextChangeEvent.text().toString();
+            List<City> results = onSearch(searchKey);
+            mSearchKey = searchKey;
+            if (results != null) {
+              mCityAdapter.clearCityList();
+              mCityAdapter.addAllCities(results,searchKey);
+            }
           }
         });
 
     Observable<List<City>> observable = Observable.fromCallable(new Callable<List<City>>() {
       @Override
       public List<City> call() throws Exception {
-         String cityJson = Utils.loadJSONFromAsset(getActivity());
-         Gson gson = new Gson();
-         Type listType = new TypeToken<List<City>>(){}.getType();
-         ArrayList<City> cities  = gson.fromJson(cityJson, listType);
-         if (mSearchTree == null) {
-             mSearchTree =  TrieFactory.createTrieMapOptimizedForMemory();
-         }
-         for (City city : cities) {
-            mSearchTree.put(city.name.toLowerCase(Locale.getDefault()), city);
-         }
-         Collections.sort(cities, new CityComparator());
-         return cities;
+        String cityJson = Utils.loadJSONFromAsset(getActivity());
+        Gson gson = new Gson();
+        Type listType = new TypeToken<List<City>>() {
+        }.getType();
+        ArrayList<City> cities = gson.fromJson(cityJson, listType);
+        if (mSearchTree == null) {
+          mSearchTree = TrieFactory.createTrieMapOptimizedForMemory();
+        }
+        for (City city : cities) {
+          mSearchTree.put(city.name.toLowerCase(Locale.getDefault()), city);
+        }
+        Collections.sort(cities, new CityComparator());
+        return cities;
       }
     });
     observable.subscribeOn(Schedulers.io())
@@ -136,7 +143,7 @@ public class SearchFragment extends Fragment implements OnCitySelected {
             mOriginalList = cities;
             if (Utils.isActivityAlive(getActivity())) {
               mProgressView.setVisibility(View.GONE);
-               mCityAdapter.addAllCities(cities);
+              mCityAdapter.addAllCities(cities, mSearchKey);
               mContentView.setVisibility(View.VISIBLE);
             }
           }
@@ -156,21 +163,14 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     return view;
   }
 
-  // TODO: Rename method, update argument and hook method into UI event
-  public void onButtonPressed(Uri uri) {
-    if (mListener != null) {
-      mListener.onFragmentInteraction(uri);
-    }
-  }
-
   @Override
   public void onAttach(Context context) {
     super.onAttach(context);
-    if (context instanceof OnFragmentInteractionListener) {
-      mListener = (OnFragmentInteractionListener) context;
+    if (context instanceof OnCitySelectedActionListener) {
+      mListener = (OnCitySelectedActionListener) context;
     } else {
       throw new RuntimeException(context.toString()
-          + " must implement OnFragmentInteractionListener");
+          + " must implement OnCitySelectedActionListener");
     }
   }
 
@@ -182,7 +182,7 @@ public class SearchFragment extends Fragment implements OnCitySelected {
 
   @Override
   public void onCitySelected(final City city) {
-
+      mListener.onCitySelected(city);
   }
 
   /**
@@ -195,18 +195,16 @@ public class SearchFragment extends Fragment implements OnCitySelected {
    * "http://developer.android.com/training/basics/fragments/communicating.html"
    * >Communicating with Other Fragments</a> for more information.
    */
-  public interface OnFragmentInteractionListener {
-
-    // TODO: Update argument type and name
-    void onFragmentInteraction(Uri uri);
+  public interface OnCitySelectedActionListener {
+    void onCitySelected(City city);
   }
 
   public List<City> onSearch(String searchKey) {
     if (mSearchTree == null) {
-         return null;
+      return null;
     }
 
-    if(Utils.isNotEmptyString(searchKey)) {
+    if (Utils.isNotEmptyString(searchKey)) {
       searchKey = searchKey.toLowerCase(Locale.getDefault());
       ArrayList<City> citiesList = new ArrayList<>();
       TrieMap<City> result = mSearchTree.getSubTrie(searchKey);
@@ -227,7 +225,7 @@ public class SearchFragment extends Fragment implements OnCitySelected {
   public void onDestroy() {
     super.onDestroy();
     if (mTextViewDisposable != null && !mTextViewDisposable.isDisposed()) {
-       mTextViewDisposable.dispose();
+      mTextViewDisposable.dispose();
     }
 
     if (mDisposable != null && !mDisposable.isDisposed()) {

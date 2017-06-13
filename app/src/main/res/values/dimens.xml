@@ -3,5 +3,6 @@
   <dimen name="margin_large">30dp</dimen>
   <dimen name="divider_height">1dp</dimen>
   <dimen name="margin_tiny">4dp</dimen>
-  <dimen name="padding_tiny">4dp</dimen>
+  <dimen name="padding_tiny">8dp</dimen>
+  <dimen name="progress_bar_diameter">50dp</dimen>
 </resources>
