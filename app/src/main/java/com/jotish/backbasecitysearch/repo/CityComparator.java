@@ -1,4 +1,4 @@
-package com.jotish.backbasecitysearch;
+package com.jotish.backbasecitysearch.repo;
 
 import com.jotish.backbasecitysearch.models.City;
 import java.util.Comparator;

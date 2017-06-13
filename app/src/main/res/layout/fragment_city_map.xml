@@ -5,4 +5,4 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   android:name="com.google.android.gms.maps.SupportMapFragment"
-  tools:context="com.jotish.backbasecitysearch.MainActivity"/>
+  tools:context="com.jotish.backbasecitysearch.views.MainActivity"/>

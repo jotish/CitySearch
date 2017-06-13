@@ -4,9 +4,9 @@ import android.content.Context;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
-import com.jotish.backbasecitysearch.CityAdapter.OnCitySelected;
+import com.jotish.backbasecitysearch.views.CityAdapter.OnCitySelected;
 import com.jotish.backbasecitysearch.R;
-import com.jotish.backbasecitysearch.Utils;
+import com.jotish.backbasecitysearch.utils.Utils;
 import com.jotish.backbasecitysearch.models.City;
 
 /**

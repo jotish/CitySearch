@@ -1,11 +1,10 @@
-package com.jotish.backbasecitysearch;
+package com.jotish.backbasecitysearch.views;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,16 +12,14 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 import com.jakewharton.rxbinding2.widget.TextViewTextChangeEvent;
-import com.jotish.backbasecitysearch.CityAdapter.OnCitySelected;
+import com.jotish.backbasecitysearch.views.CityAdapter.OnCitySelected;
+import com.jotish.backbasecitysearch.R;
 import com.jotish.backbasecitysearch.models.City;
 import com.jotish.backbasecitysearch.repo.CityRepository;
-import com.jotish.backbasecitysearch.trie.TrieFactory;
 import com.jotish.backbasecitysearch.trie.TrieMap;
-import com.jotish.backbasecitysearch.views.RecyclerViewPlus;
+import com.jotish.backbasecitysearch.utils.Utils;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -30,13 +27,7 @@ import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -116,19 +107,7 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     Observable<List<City>> observable = Observable.fromCallable(new Callable<List<City>>() {
       @Override
       public List<City> call() throws Exception {
-        String cityJson = Utils.loadJSONFromAsset(getActivity());
-        Gson gson = new Gson();
-        Type listType = new TypeToken<List<City>>() {
-        }.getType();
-        ArrayList<City> cities = gson.fromJson(cityJson, listType);
-        if (mSearchTree == null) {
-          mSearchTree = TrieFactory.createTrieMapOptimizedForMemory();
-        }
-        for (City city : cities) {
-          mSearchTree.put(city.name.toLowerCase(Locale.getDefault()), city);
-        }
-        Collections.sort(cities, new CityComparator());
-        return cities;
+        return CityRepository.loadSortedCityList(getActivity(), false);
       }
     });
     observable.subscribeOn(Schedulers.io())
@@ -143,6 +122,9 @@ public class SearchFragment extends Fragment implements OnCitySelected {
           public void onNext(@NonNull final List<City> cities) {
             mOriginalList = cities;
             if (Utils.isActivityAlive(getActivity())) {
+              if (mSearchTree == null) {
+                mSearchTree = CityRepository.buildCityTrieMap(cities);
+              }
               mProgressView.setVisibility(View.GONE);
               mCityAdapter.addAllCities(cities, mSearchKey);
               mContentView.setVisibility(View.VISIBLE);
@@ -186,16 +168,6 @@ public class SearchFragment extends Fragment implements OnCitySelected {
       mListener.onCitySelected(city);
   }
 
-  /**
-   * This interface must be implemented by activities that contain this
-   * fragment to allow an interaction in this fragment to be communicated
-   * to the activity and potentially other fragments contained in that
-   * activity.
-   * <p>
-   * See the Android Training lesson <a href=
-   * "http://developer.android.com/training/basics/fragments/communicating.html"
-   * >Communicating with Other Fragments</a> for more information.
-   */
   public interface OnCitySelectedActionListener {
     void onCitySelected(City city);
   }

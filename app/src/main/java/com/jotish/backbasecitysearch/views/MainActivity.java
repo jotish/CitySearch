@@ -1,12 +1,12 @@
-package com.jotish.backbasecitysearch;
+package com.jotish.backbasecitysearch.views;
 
-import android.net.Uri;
 import android.os.Bundle;
 
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import com.jotish.backbasecitysearch.CityMapFragment.OnFragmentInteractionListener;
-import com.jotish.backbasecitysearch.SearchFragment.OnCitySelectedActionListener;
+import com.jotish.backbasecitysearch.views.CityMapFragment.OnFragmentInteractionListener;
+import com.jotish.backbasecitysearch.R;
+import com.jotish.backbasecitysearch.views.SearchFragment.OnCitySelectedActionListener;
 import com.jotish.backbasecitysearch.models.City;
 
 /**

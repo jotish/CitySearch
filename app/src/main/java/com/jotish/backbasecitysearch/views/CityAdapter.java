@@ -1,4 +1,4 @@
-package com.jotish.backbasecitysearch;
+package com.jotish.backbasecitysearch.views;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 
+import com.jotish.backbasecitysearch.R;
 import com.jotish.backbasecitysearch.models.City;
 import com.jotish.backbasecitysearch.views.CityViewHolder;
 import com.jotish.backbasecitysearch.views.RecyclerViewPlus;
