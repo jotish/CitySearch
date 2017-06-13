@@ -31,7 +31,7 @@ public class CityRepository {
     }
     // Search prefixes using the Perfix Search Tree
     if (Utils.isNotEmptyString(searchKey)) {
-      searchKey = searchKey.toLowerCase(Locale.getDefault());
+      searchKey = searchKey.toLowerCase(Locale.getDefault()).trim();
       ArrayList<City> citiesList = new ArrayList<>();
       TrieMap<City> result = searchTree.getSubTrie(searchKey);
       if (result != null) {
