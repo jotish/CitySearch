@@ -107,7 +107,7 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     Observable<List<City>> observable = Observable.fromCallable(new Callable<List<City>>() {
       @Override
       public List<City> call() throws Exception {
-        return CityRepository.loadSortedCityList(getActivity(), false);
+        return CityRepository.loadSortedCityList(getActivity(), true);
       }
     });
     observable.subscribeOn(Schedulers.io())

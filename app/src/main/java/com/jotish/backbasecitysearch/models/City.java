@@ -14,6 +14,14 @@ public class City implements  Parcelable {
     public int  _id;
     public Coordinates coord;
 
+    public City(final String country, final String name, final int _id,
+        final Coordinates coord) {
+        this.country = country;
+        this.name = name;
+        this._id = _id;
+        this.coord = coord;
+    }
+
     protected City(Parcel in) {
         country = in.readString();
         name = in.readString();
@@ -44,5 +52,30 @@ public class City implements  Parcelable {
         parcel.writeString(name);
         parcel.writeInt(_id);
         parcel.writeParcelable(coord, i);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final City city = (City) o;
+
+        if (!country.equals(city.country)) {
+            return false;
+        }
+
+        return name.equals(city.name);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = country.hashCode();
+        result = 31 * result + name.hashCode();
+        return result;
     }
 }

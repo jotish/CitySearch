@@ -51,7 +51,7 @@ public class CityRepository {
     String json = null;
     try {
       String file = (small) ? "city.list-short.json": "city.list.json";
-      InputStream is = context.getAssets().open("city.list.json");
+      InputStream is = context.getAssets().open(file);
       int size = is.available();
       byte[] buffer = new byte[size];
       is.read(buffer);
@@ -68,12 +68,15 @@ public class CityRepository {
     Collections.sort(cities, new CityComparator());
   }
 
-  public static List<City> loadCityList(Context context, boolean smallSet) {
-    String cityJson = loadCityJSONFromAsset(context, smallSet);
+  public static List<City> parseJson(String cityJson) {
     Gson gson = new Gson();
     Type listType = new TypeToken<List<City>>() {
     }.getType();
     return gson.fromJson(cityJson, listType);
+  }
+  public static List<City> loadCityList(Context context, boolean smallSet) {
+    String cityJson = loadCityJSONFromAsset(context, smallSet);
+    return parseJson(cityJson);
   }
 
   public static List<City> loadSortedCityList(Context context, boolean smallSet) {
