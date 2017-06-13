@@ -37,7 +37,7 @@ public class CityRepository {
       if (result != null) {
         Set<Entry<String, City>> cities = result.entrySet();
         for (Map.Entry<String, City> city : cities) {
-          citiesList.add(city.getValue());
+            citiesList.add(city.getValue());
         }
       }
       sortList(citiesList);
@@ -88,7 +88,7 @@ public class CityRepository {
   public static TrieMap<City> buildCityTrieMap(List<City> cities) {
     TrieMap<City> cityTrieMap = TrieFactory.createTrieMapOptimizedForMemory();
     for (City city : cities) {
-      cityTrieMap.put(city.name.toLowerCase(Locale.getDefault()), city);
+      cityTrieMap.put(city.name.toLowerCase(Locale.getDefault()) + city.country, city);
     }
     return cityTrieMap;
   }
