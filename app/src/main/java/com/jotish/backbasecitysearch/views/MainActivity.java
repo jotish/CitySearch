@@ -24,10 +24,14 @@ public class MainActivity extends AppCompatActivity implements OnCitySelectedAct
   }
 
   private void loadSearchFragment() {
-    SearchFragment searchFragment = SearchFragment.newInstance();
-    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-    transaction.add(R.id.fragment_container, searchFragment);
-    transaction.commit();
+    SearchFragment f = (SearchFragment)
+        getSupportFragmentManager().findFragmentByTag(SearchFragment.class.getName());
+    if(f == null) {
+      SearchFragment searchFragment = SearchFragment.newInstance();
+      FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+      transaction.add(R.id.fragment_container, searchFragment);
+      transaction.commit();
+    }
   }
 
   @Override

@@ -17,13 +17,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import com.jotish.backbasecitysearch.R;
 import com.jotish.backbasecitysearch.models.City;
+import com.jotish.backbasecitysearch.models.Data;
 import com.jotish.backbasecitysearch.repo.CityDataLoader;
 import com.jotish.backbasecitysearch.repo.CityRepository;
 import com.jotish.backbasecitysearch.trie.TrieMap;
 import com.jotish.backbasecitysearch.views.CityAdapter.OnCitySelected;
 import java.util.List;
 
-public class SearchFragment extends Fragment implements OnCitySelected,LoaderCallbacks<List<City>> {
+public class SearchFragment extends Fragment implements OnCitySelected,LoaderCallbacks<Data> {
 
 
   private OnCitySelectedActionListener mListener;
@@ -149,28 +150,35 @@ public class SearchFragment extends Fragment implements OnCitySelected,LoaderCal
   }
 
   @Override
-  public Loader<List<City>> onCreateLoader(final int id, final Bundle args) {
+  public Loader<Data> onCreateLoader(final int id, final Bundle args) {
     return new CityDataLoader(getActivity());
   }
 
   @Override
-  public void onLoadFinished(final Loader<List<City>> loader, final List<City> cities) {
-      mOriginalList = cities;
-      if (mSearchTree == null) {
-        mSearchTree = CityRepository.buildCityTrieMap(cities);
-      }
+  public void onLoadFinished(final Loader<Data> loader, final Data cityData) {
+      mOriginalList = cityData.getCities();
+      mSearchTree = cityData.getSearchTree();
       mProgressView.setVisibility(View.GONE);
-      mCityAdapter.addAllCities(cities, mSearchKey);
+      mCityAdapter.addAllCities(mOriginalList, mSearchKey);
       mContentView.setVisibility(View.VISIBLE);
   }
 
   @Override
-  public void onLoaderReset(final Loader<List<City>> loader) {
+  public void onLoaderReset(final Loader<Data> loader) {
       mCityAdapter.clearCityList();
   }
 
   public interface OnCitySelectedActionListener {
     void onCitySelected(City city);
+  }
+
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
+    if (mHandler != null) {
+      mHandler.removeCallbacksAndMessages(null);
+    }
+    getLoaderManager().destroyLoader(LOADER_ID);
   }
 
   @Override
