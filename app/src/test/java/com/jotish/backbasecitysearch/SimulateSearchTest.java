@@ -8,15 +8,10 @@ import com.jotish.backbasecitysearch.trie.TrieMap;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
 public class SimulateSearchTest {
 
 
@@ -932,8 +927,6 @@ public class SimulateSearchTest {
       + "  }\n"
       + "]  ";
 
-  @Mock
-  Context mMockContext;
   @Test
   public void handleSearch() throws Exception {
     List<City> cities = CityRepository.parseJson(CITY_TEST_JSON);
@@ -968,5 +961,10 @@ public class SimulateSearchTest {
     String SEARCH_TEST_4 = "Az";
     List<City> result4 = CityRepository.onSearch(cities, searchTrie, SEARCH_TEST_4);
     assertThat(result4, hasSize(0));
+
+
+    String SEARCH_TEST_INVALID = "~";
+    List<City> resultInvalid = CityRepository.onSearch(cities, searchTrie, SEARCH_TEST_INVALID);
+    assertThat(resultInvalid, hasSize(0));
   }
 }
