@@ -94,7 +94,7 @@ public class SearchFragment extends Fragment implements OnCitySelected {
           @Override
           public void accept(@NonNull final TextViewTextChangeEvent textViewTextChangeEvent)
               throws Exception {
-            String searchKey = textViewTextChangeEvent.text().toString();
+            String searchKey = textViewTextChangeEvent.text().toString().trim();
             List<City> results = CityRepository.onSearch(mOriginalList, mSearchTree, searchKey);
             mSearchKey = searchKey;
             if (results != null) {
