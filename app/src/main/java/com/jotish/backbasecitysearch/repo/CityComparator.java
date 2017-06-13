@@ -14,9 +14,10 @@ public class CityComparator implements Comparator<City> {
   public int compare(final City city1, final City city2) {
     int c;
     Locale defaultLocale = Locale.getDefault();
-    c = city1.country.toUpperCase(defaultLocale).compareTo(city2.country.toUpperCase(defaultLocale));
+    c = city1.name.toUpperCase(defaultLocale).compareTo(city2.name.toUpperCase(defaultLocale));
     if (c == 0)
-      c = city1.name.toUpperCase(defaultLocale).compareTo(city2.name.toUpperCase(defaultLocale));
+    c = city1.country.toUpperCase(defaultLocale).compareTo(city2.country.toUpperCase(defaultLocale));
+
     return c;
   }
 }
