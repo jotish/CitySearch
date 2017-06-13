@@ -2,50 +2,42 @@ package com.jotish.backbasecitysearch.views;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
-import com.jakewharton.rxbinding2.widget.RxTextView;
-import com.jakewharton.rxbinding2.widget.TextViewTextChangeEvent;
-import com.jotish.backbasecitysearch.views.CityAdapter.OnCitySelected;
 import com.jotish.backbasecitysearch.R;
 import com.jotish.backbasecitysearch.models.City;
+import com.jotish.backbasecitysearch.repo.CityDataLoader;
 import com.jotish.backbasecitysearch.repo.CityRepository;
 import com.jotish.backbasecitysearch.trie.TrieMap;
-import com.jotish.backbasecitysearch.utils.Utils;
-import io.reactivex.Observable;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
+import com.jotish.backbasecitysearch.views.CityAdapter.OnCitySelected;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
-public class SearchFragment extends Fragment implements OnCitySelected {
+public class SearchFragment extends Fragment implements OnCitySelected,LoaderCallbacks<List<City>> {
 
 
   private OnCitySelectedActionListener mListener;
   private TextView mEmptyView;
   private CityAdapter mCityAdapter;
-  private Disposable mTextViewDisposable;
-  private final int DEBOUNCE_SEARCH_DELAY = 400;
-  private final long INITIAL_EMISSION = 1;
-  private Disposable mDisposable;
   private List<City> mOriginalList;
   private TrieMap<City> mSearchTree;
   private View mContentView;
   private View mProgressView;
   private String mSearchKey;
+  private String mSearchTypingString;
+  private Handler mHandler;
+  private final int SEARCH_DEBOUNCE = 500; //milliseonds
+  private final int LOADER_ID = 99932;
 
   public SearchFragment() {
     // Required empty public constructor
@@ -61,9 +53,24 @@ public class SearchFragment extends Fragment implements OnCitySelected {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    if (getArguments() != null) {
-    }
+    mHandler = new Handler();
   }
+
+  private Runnable mSearchRunnable = new Runnable() {
+    @Override
+    public void run() {
+      Bundle bundle = null;
+      if(mSearchTypingString != null) {
+        String constraint = mSearchTypingString.toString().trim();
+        List<City> results = CityRepository.onSearch(mOriginalList, mSearchTree, constraint);
+        mSearchKey = constraint;
+        if (results != null) {
+          mCityAdapter.clearCityList();
+          mCityAdapter.addAllCities(results,constraint);
+        }
+      }
+    }
+  };
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -86,63 +93,36 @@ public class SearchFragment extends Fragment implements OnCitySelected {
     mProgressView.setVisibility(View.VISIBLE);
     recyclerViewPlus.setAdapter(mCityAdapter);
     final EditText searchTextView = (EditText) view.findViewById(R.id.searchText);
-    mTextViewDisposable = RxTextView.textChangeEvents(searchTextView)
-        .debounce(DEBOUNCE_SEARCH_DELAY, TimeUnit.MILLISECONDS) // default Scheduler is Computation
-        .observeOn(AndroidSchedulers.mainThread())
-        .skip(INITIAL_EMISSION) // ignore the first emission
-        .subscribe(new Consumer<TextViewTextChangeEvent>() {
-          @Override
-          public void accept(@NonNull final TextViewTextChangeEvent textViewTextChangeEvent)
-              throws Exception {
-            String searchKey = textViewTextChangeEvent.text().toString().trim();
-            List<City> results = CityRepository.onSearch(mOriginalList, mSearchTree, searchKey);
-            mSearchKey = searchKey;
-            if (results != null) {
-              mCityAdapter.clearCityList();
-              mCityAdapter.addAllCities(results,searchKey);
-            }
-          }
-        });
+    TextWatcher textWatcher = new TextWatcher() {
 
-    Observable<List<City>> observable = Observable.fromCallable(new Callable<List<City>>() {
       @Override
-      public List<City> call() throws Exception {
-        return CityRepository.loadSortedCityList(getActivity(), false);
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+
       }
-    });
-    observable.subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(new Observer<List<City>>() {
-          @Override
-          public void onSubscribe(@NonNull final Disposable d) {
-            mDisposable = d;
+
+      @Override
+      public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+      }
+
+      @Override
+      public void afterTextChanged(Editable s) {
+        mSearchTypingString = s.toString().trim();
+
+        if(mSearchTypingString == null) {
+          if(mSearchKey != null ) {
+            mHandler.removeCallbacks(mSearchRunnable);
+            mHandler.postDelayed(mSearchRunnable, SEARCH_DEBOUNCE);
           }
-
-          @Override
-          public void onNext(@NonNull final List<City> cities) {
-            mOriginalList = cities;
-            if (Utils.isActivityAlive(getActivity())) {
-              if (mSearchTree == null) {
-                mSearchTree = CityRepository.buildCityTrieMap(cities);
-              }
-              mProgressView.setVisibility(View.GONE);
-              mCityAdapter.addAllCities(cities, mSearchKey);
-              mContentView.setVisibility(View.VISIBLE);
-            }
+        } else {
+          if(!mSearchTypingString.equals(mSearchKey)){
+            mHandler.removeCallbacks(mSearchRunnable);
+            mHandler.postDelayed(mSearchRunnable, SEARCH_DEBOUNCE);
           }
-
-          @Override
-          public void onError(@NonNull final Throwable e) {
-            Toast.makeText(getActivity(), getString(R.string.failed_loading_data),
-                Toast.LENGTH_SHORT);
-          }
-
-          @Override
-          public void onComplete() {
-
-          }
-        });
-
+        }
+      }
+    };
+    searchTextView.addTextChangedListener(textWatcher);
+    getLoaderManager().restartLoader(LOADER_ID, null, this);
     return view;
   }
 
@@ -168,6 +148,27 @@ public class SearchFragment extends Fragment implements OnCitySelected {
       mListener.onCitySelected(city);
   }
 
+  @Override
+  public Loader<List<City>> onCreateLoader(final int id, final Bundle args) {
+    return new CityDataLoader(getActivity());
+  }
+
+  @Override
+  public void onLoadFinished(final Loader<List<City>> loader, final List<City> cities) {
+      mOriginalList = cities;
+      if (mSearchTree == null) {
+        mSearchTree = CityRepository.buildCityTrieMap(cities);
+      }
+      mProgressView.setVisibility(View.GONE);
+      mCityAdapter.addAllCities(cities, mSearchKey);
+      mContentView.setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void onLoaderReset(final Loader<List<City>> loader) {
+      mCityAdapter.clearCityList();
+  }
+
   public interface OnCitySelectedActionListener {
     void onCitySelected(City city);
   }
@@ -175,12 +176,9 @@ public class SearchFragment extends Fragment implements OnCitySelected {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (mTextViewDisposable != null && !mTextViewDisposable.isDisposed()) {
-      mTextViewDisposable.dispose();
+    if (mHandler != null) {
+      mHandler.removeCallbacksAndMessages(null);
     }
-
-    if (mDisposable != null && !mDisposable.isDisposed()) {
-      mDisposable.dispose();
-    }
+    getLoaderManager().destroyLoader(LOADER_ID);
   }
 }

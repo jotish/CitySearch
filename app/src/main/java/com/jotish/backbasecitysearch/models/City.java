@@ -2,7 +2,6 @@ package com.jotish.backbasecitysearch.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
 
 /**
  * Created by jotishsuthar on 12/06/17.

@@ -6,6 +6,7 @@ import android.support.v4.content.ContextCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.view.inputmethod.InputMethodManager;
 import com.jotish.backbasecitysearch.R;
 import java.text.Normalizer;
 import java.util.Locale;
@@ -63,5 +64,11 @@ public class Utils {
     } else {
       return originalText;
     }
+  }
+  public static void hideKeyboard(Activity activity) {
+      InputMethodManager inputManager = (InputMethodManager) activity
+          .getSystemService(Context.INPUT_METHOD_SERVICE);
+      inputManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(),
+          InputMethodManager.HIDE_NOT_ALWAYS);
   }
 }

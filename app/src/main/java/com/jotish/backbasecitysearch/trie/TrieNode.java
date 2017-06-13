@@ -1,10 +1,8 @@
 package com.jotish.backbasecitysearch.trie;
 
-import com.jotish.backbasecitysearch.trie.TrieMap.Entry;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
