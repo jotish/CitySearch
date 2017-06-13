@@ -30,8 +30,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.google.android.gms:play-services-maps:10.2.6'
     compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.jakewharton.rxbinding2:rxbinding:2.0.0'
-    compile 'com.jakewharton.rxbinding2:rxbinding-design:2.0.0'
     compile 'com.google.code.gson:gson:2.7'
     testCompile 'junit:junit:4.12'
     testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'
