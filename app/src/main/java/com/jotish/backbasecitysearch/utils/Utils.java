@@ -72,7 +72,7 @@ public class Utils {
       inputManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(),
           InputMethodManager.HIDE_NOT_ALWAYS);
     } catch (Exception e) {
-      
+
     }
   }
 }
